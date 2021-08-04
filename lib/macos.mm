@@ -7,7 +7,7 @@
 #include <thread>
 #include <fstream>
 
-extern "C" AXError _AXUIElementGetWindow(AXUIElementRef, CGWindowID* out);
+//extern "C" AXError _AXUIElementGetWindow(AXUIElementRef, CGWindowID* out);
 
 // CGWindowID to AXUIElementRef windows map
 std::map<int, AXUIElementRef> windowsMap;
@@ -43,16 +43,22 @@ NSDictionary* getWindowInfo(int handle) {
   return NULL;
 }
 
+/*
+ * Unable to call on App Store due to private API call
+ * Patched to remove the private API call.
+ * This function will not work properly
+ */
 AXUIElementRef getAXWindow(int pid, int handle) {
   auto app = AXUIElementCreateApplication(pid);
 
   CFArrayRef windows;
   AXUIElementCopyAttributeValues(app, kAXWindowsAttribute, 0, 100, &windows);
 
-  for (id child in  (NSArray *)windows) {
+  /*for (id child in  (NSArray *)windows) {
     AXUIElementRef window = (AXUIElementRef) child;
 
     CGWindowID windowId;
+    //Rejected on App Store because of this private API call:
     _AXUIElementGetWindow(window, &windowId);
 
     if (windowId == handle) {
@@ -61,7 +67,7 @@ AXUIElementRef getAXWindow(int pid, int handle) {
       CFRelease(windows);
       return window;
     }
-  }
+  }*/
 
   if (windows) {
     CFRelease(windows);
@@ -69,6 +75,10 @@ AXUIElementRef getAXWindow(int pid, int handle) {
   return NULL;
 }
 
+/*
+ * Unable to call on App Store due to private API call
+ * Will break due to broken getAXWindow()
+ */
 void cacheWindow(int handle, int pid) {
   if (_requestAccessibility(false)) {
     if (windowsMap.find(handle) == windowsMap.end()) {
@@ -77,6 +87,9 @@ void cacheWindow(int handle, int pid) {
   }
 }
 
+/*
+ * Unable to call on App Store due to private API call
+ */
 void cacheWindowByInfo(NSDictionary* info) {
   if (info) {
     NSNumber *ownerPid = info[(id)kCGWindowOwnerPID];
@@ -161,6 +174,10 @@ Napi::Number getActiveWindow(const Napi::CallbackInfo &info) {
   return Napi::Number::New(env, 0);
 }
 
+/*
+ * Patched for App Store. Gets called with creating a new Window in TypeScript.
+ * Now it won't cache the window which caused an private API call
+ */
 Napi::Object initWindow(const Napi::CallbackInfo &info) {
   Napi::Env env{info.Env()};
 
@@ -176,7 +193,7 @@ Napi::Object initWindow(const Napi::CallbackInfo &info) {
     obj.Set("processId", [ownerPid intValue]);
     obj.Set("path", [app.bundleURL.path UTF8String]);
 
-    cacheWindow(handle, [ownerPid intValue]);
+    //cacheWindow(handle, [ownerPid intValue]);
 
     return obj;
   }
@@ -199,6 +216,9 @@ Napi::String getWindowTitle(const Napi::CallbackInfo &info) {
   return Napi::String::New(env, "");
 }
 
+/*
+ * Unable to call on App Store due to private API call
+ */
 Napi::Object getWindowBounds(const Napi::CallbackInfo &info) {
    Napi::Env env{info.Env()};
 
@@ -222,6 +242,9 @@ Napi::Object getWindowBounds(const Napi::CallbackInfo &info) {
   return Napi::Object::New(env);
 }
 
+/*
+ * Unable to call on App Store due to private API call
+ */
 Napi::Boolean setWindowBounds(const Napi::CallbackInfo &info) {
   Napi::Env env{info.Env()};
 
@@ -249,6 +272,9 @@ Napi::Boolean setWindowBounds(const Napi::CallbackInfo &info) {
   return Napi::Boolean::New(env, true);
 }
 
+/*
+ * Unable to call on App Store due to private API call
+ */
 Napi::Boolean bringWindowToTop(const Napi::CallbackInfo &info) {
   Napi::Env env{info.Env()};
 
@@ -264,6 +290,9 @@ Napi::Boolean bringWindowToTop(const Napi::CallbackInfo &info) {
   return Napi::Boolean::New(env, true);
 }
 
+/*
+ * Unable to call on App Store due to private API call
+ */
 Napi::Boolean setWindowMinimized(const Napi::CallbackInfo &info) {
   Napi::Env env{info.Env()};
 
@@ -279,6 +308,9 @@ Napi::Boolean setWindowMinimized(const Napi::CallbackInfo &info) {
   return Napi::Boolean::New(env, true);
 }
 
+/*
+ * Unable to call on App Store due to private API call
+ */
 Napi::Boolean setWindowMaximized(const Napi::CallbackInfo &info) {
   Napi::Env env{info.Env()};
   auto handle = info[0].As<Napi::Number>().Int32Value();
